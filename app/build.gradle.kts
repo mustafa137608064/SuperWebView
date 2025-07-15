@@ -61,4 +61,5 @@ dependencies {
     implementation(libs.androidx.webkit)
     // SplashScreen
     implementation(libs.androidx.core.splashscreen)
+    implementation("androidx.compose.material3:material3-pull-to-refresh:1.0.1")
 }
