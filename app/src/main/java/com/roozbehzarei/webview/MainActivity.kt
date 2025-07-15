@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -35,16 +36,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import com.roozbehzarei.webview.ui.theme.SuperWebViewTheme // اطمینان حاصل کنید که نام Theme شما همین است
 
 // The URL of the website to be loaded in the app
-private const val WEBSITE = "https://tellso.ir/v2pg/index.php" // Updated to base URL for better matching
+private const val WEBSITE = "https://tellso.ir/v2pg/index.php"
 
 class MainActivity : ComponentActivity() {
-
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         setContent {
+            // نکته: اگر نام Theme شما متفاوت است، آن را در خط زیر جایگزین کنید.
+            // این نام باید با نام تعریف شده در فایل ui/theme/Theme.kt مطابقت داشته باشد.
             SuperWebViewTheme {
                 Surface(
                     modifier = Modifier
@@ -59,6 +62,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class) // <<< انوتیشن ضروری برای PullToRefresh
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
 private fun MainScreen() {
@@ -85,24 +89,21 @@ private fun MainScreen() {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .nestedScroll(state.nestedScrollConnection) // Use nestedScroll for PullToRefresh
+            .nestedScroll(state.nestedScrollConnection)
     ) {
         WebViewer(
             modifier = Modifier.fillMaxSize(),
             onWebViewReady = { createdWebView ->
                 webView = createdWebView
-                // Configure WebChromeClient here
                 webChromeClient = object : WebChromeClient() {
                     override fun onProgressChanged(view: WebView?, newProgress: Int) {
                         super.onProgressChanged(view, newProgress)
                         progress = newProgress
                     }
-
                     override fun onShowCustomView(view: View?, callback: CustomViewCallback?) {
                         super.onShowCustomView(view, callback)
                         fullScreenView = view
                     }
-
                     override fun onHideCustomView() {
                         super.onHideCustomView()
                         fullScreenView = null
@@ -110,13 +111,11 @@ private fun MainScreen() {
                 }
                 createdWebView.webChromeClient = webChromeClient
 
-                // Configure WebViewClient here
                 createdWebView.webViewClient = object : WebViewClient() {
                     override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
                         super.onPageStarted(view, url, favicon)
                         isBackEnabled = view?.canGoBack() ?: false
                     }
-
                     override fun onPageFinished(view: WebView?, url: String?) {
                         super.onPageFinished(view, url)
                         isBackEnabled = view?.canGoBack() ?: false
@@ -124,32 +123,23 @@ private fun MainScreen() {
                             state.endRefresh()
                         }
                     }
-
-                    override fun shouldOverrideUrlLoading(
-                        view: WebView?,
-                        request: WebResourceRequest?
-                    ): Boolean {
+                    override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                         val url = request?.url?.toString() ?: return false
-
-                        // Handle internal links within the WebView
                         if (url.startsWith(WEBSITE)) {
-                            return false // Let the WebView handle it
+                            return false
                         }
-
-                        // Handle external links (http/https) and other intents (tel, mailto, etc.)
                         try {
                             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
                             view?.context?.startActivity(intent)
                         } catch (e: Exception) {
                             // Could not handle the intent
                         }
-                        return true // We've handled the URL
+                        return true
                     }
                 }
             }
         )
 
-        // Pull to Refresh logic
         if (state.isRefreshing) {
             LaunchedEffect(true) {
                 webView?.reload()
@@ -166,7 +156,6 @@ private fun MainScreen() {
         ProgressIndicator(progress)
     }
 
-    // Show fullscreen content (e.g., video)
     if (fullScreenView != null) {
         AndroidView(
             modifier = Modifier.fillMaxSize(),
@@ -195,14 +184,11 @@ private fun WebViewer(
         modifier = modifier,
         factory = { context ->
             WebView(context).apply {
-                // Basic WebView settings
                 with(settings) {
                     javaScriptEnabled = true
                     domStorageEnabled = true
                     setSupportZoom(false)
-                    // Optional: Allow mixed content for compatibility
                     mixedContentMode = android.webkit.WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
-                    // Optional: Algorithmic darkening for modern APIs
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         isAlgorithmicDarkeningAllowed = true
                     }
