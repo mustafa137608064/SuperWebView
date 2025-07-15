@@ -38,23 +38,24 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
-
 }
 
 dependencies {
-    // Compose Bill of Materials
-    val composeBom = platform("androidx.compose:compose-bom:2024.10.01")
+    // ۱. استفاده از نسخه پایدار Compose BOM
+    val composeBom = platform("androidx.compose:compose-bom:2024.06.00")
     implementation(composeBom)
     androidTestImplementation(composeBom)
+
     // Compose dependencies
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
-    implementation("androidx.compose.material3:material3:1.2.1")
-    implementation(libs.androidx.material)
+    implementation("androidx.compose.material3:material3") // نسخه از BOM گرفته می‌شود
+    // implementation(libs.androidx.material) // ۲. حذف وابستگی Material 2 برای جلوگیری از تداخل
     implementation(libs.androidx.foundation)
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.tooling.preview)
     debugImplementation(libs.androidx.ui.tooling)
+
     // Core
     implementation(libs.androidx.core.ktx)
     // Webkit
