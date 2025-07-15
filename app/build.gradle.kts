@@ -49,7 +49,7 @@ dependencies {
     // Compose dependencies
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
-    implementation(libs.androidx.material3)
+    implementation("androidx.compose.material3:material3:1.2.1")
     implementation(libs.androidx.material)
     implementation(libs.androidx.foundation)
     implementation(libs.androidx.ui)
@@ -61,5 +61,4 @@ dependencies {
     implementation(libs.androidx.webkit)
     // SplashScreen
     implementation(libs.androidx.core.splashscreen)
-    implementation("androidx.compose.material3:material3-pull-to-refresh:1.0.1")
 }
