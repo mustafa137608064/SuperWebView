@@ -36,18 +36,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import com.roozbehzarei.webview.ui.theme.SuperWebViewTheme // اطمینان حاصل کنید که نام Theme شما همین است
+import com.roozbehzarei.webview.ui.theme.SuperWebViewTheme
 
-// The URL of the website to be loaded in the app
-private const val WEBSITE = "https://tellso.ir/v2pg/index.php"
+// آدرس اصلی وب‌سایت
+private const val WEBSITE_URL = "https://tellso.ir/v2pg/index.php"
+// نام دامنه برای بررسی
+private const val WEBSITE_HOST = "tellso.ir"
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         setContent {
-            // نکته: اگر نام Theme شما متفاوت است، آن را در خط زیر جایگزین کنید.
-            // این نام باید با نام تعریف شده در فایل ui/theme/Theme.kt مطابقت داشته باشد.
             SuperWebViewTheme {
                 Surface(
                     modifier = Modifier
@@ -62,7 +62,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class) // <<< انوتیشن ضروری برای PullToRefresh
+@OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
 private fun MainScreen() {
@@ -70,22 +70,18 @@ private fun MainScreen() {
     val state = rememberPullToRefreshState()
     var progress by remember { mutableStateOf(0) }
     var fullScreenView: View? by remember { mutableStateOf(null) }
-    var webChromeClient: WebChromeClient? = null // To handle fullscreen exit
+    var webChromeClient: WebChromeClient? = null
 
-    // --- Back Handler Logic ---
     var isBackEnabled by remember { mutableStateOf(false) }
 
-    // This handler is for exiting fullscreen video
     BackHandler(enabled = fullScreenView != null) {
         webChromeClient?.onHideCustomView()
     }
 
-    // This handler is for navigating back in WebView history
     BackHandler(enabled = isBackEnabled && fullScreenView == null) {
         webView?.goBack()
     }
 
-    // --- UI ---
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -123,18 +119,24 @@ private fun MainScreen() {
                             state.endRefresh()
                         }
                     }
+                    
+                    // --- بخش اصلاح شده ---
                     override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
-                        val url = request?.url?.toString() ?: return false
-                        if (url.startsWith(WEBSITE)) {
-                            return false
+                        val requestUrl = request?.url ?: return false
+
+                        // اگر دامنه لینک با دامنه سایت ما یکی بود، در خود برنامه باز کن
+                        if (requestUrl.host == WEBSITE_HOST) {
+                            return false // false یعنی اجازه بده خود WebView آن را باز کند
                         }
+
+                        // در غیر این صورت، لینک را با یک برنامه خارجی (مثل کروم) باز کن
                         try {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                            val intent = Intent(Intent.ACTION_VIEW, requestUrl)
                             view?.context?.startActivity(intent)
                         } catch (e: Exception) {
                             // Could not handle the intent
                         }
-                        return true
+                        return true // true یعنی ما خودمان لینک را مدیریت کردیم
                     }
                 }
             }
@@ -193,7 +195,7 @@ private fun WebViewer(
                         isAlgorithmicDarkeningAllowed = true
                     }
                 }
-                loadUrl(WEBSITE)
+                loadUrl(WEBSITE_URL)
                 onWebViewReady(this)
             }
         }
