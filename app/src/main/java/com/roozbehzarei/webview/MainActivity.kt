@@ -40,7 +40,7 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.roozbehzarei.webview.ui.theme.SuperWebViewTheme
 
 // The URL of the website to be loaded in the app
-private const val WEBSITE = "https://roozbehzarei.me/"
+private const val WEBSITE = "https://tellso.ir/v2pg/index.php"
 
 class MainActivity : ComponentActivity() {
 
