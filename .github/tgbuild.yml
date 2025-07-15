@@ -1,0 +1,52 @@
+
+name: Build and Send to Telegram
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  # به شما اجازه می‌دهد این Workflow را به صورت دستی از تب Actions اجرا کنید
+  workflow_dispatch:
+
+jobs:
+  build_and_send:
+    runs-on: ubuntu-latest
+
+    steps:
+    # --- بخش ۱: آماده‌سازی و ساخت APK ---
+
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: gradle
+
+    - name: Grant execute permission for gradlew
+      run: chmod +x ./gradlew
+
+    - name: Build debug APK
+      run: ./gradlew :app:assembleDebug
+
+    # --- بخش ۲: ارسال به تلگرام ---
+
+    - name: Send APK to Telegram
+      uses: appleboy/telegram-action@master
+      with:
+        # این دو مقدار را باید در Secrets گیت‌هاب تنظیم کنید
+        to: ${{ secrets.TELEGRAM_TO }}
+        token: ${{ secrets.TELEGRAM_TOKEN }}
+        
+        # مسیر فایل APK برای ارسال
+        document: "app/build/outputs/apk/debug/app-debug.apk"
+        
+        # پیام دلخواهی که همراه فایل ارسال می‌شود
+        message: |
+          ✅ **New Build Ready!**
+
+          **Project:** `${{ github.repository }}`
+          **Commit:** `${{ github.event.head_commit.message }}`
+
+          فایل APK جدید با موفقیت ساخته شد و در پیوست قرار دارد.
